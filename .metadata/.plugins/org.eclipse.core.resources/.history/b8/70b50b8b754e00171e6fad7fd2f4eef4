@@ -1,0 +1,59 @@
+import java.io.IOException;
+import java.util.TreeMap;
+
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+
+
+
+public class Top5_ViableProductSubclass {
+
+	public static class MyMapper extends Mapper<LongWritable, Text,  Text, Text>
+	{
+		public void map(LongWritable key, Text value, Context c) throws IOException, InterruptedException{
+			String [] str = value.toString().split(",");
+			String val=str[2]+","+str[8]+","+str[7];
+			c.write(new Text(str[4]), new Text(val));
+			
+		}
+	}
+     public static class MyReducer extends Reducer<Text, Text, NullWritable, Text>{
+    	 private TreeMap<Long,String> product = new TreeMap<Long,String>();
+    	 long totalsale=0,totalcost=0;
+    	 String Age=null;	 
+    	 
+    	 protected void reduce(Text key, Iterable<Text> value, Context context){
+    		 
+    		 for(Text val:value)
+    		 {
+    			 String[] str = val.toString().split(",");
+    			 totalsale=totalsale+Long.parseLong(str[1]);
+    			 totalcost=totalcost+Long.parseLong(str[2]);
+    			 Age=str[0];
+    			 if(product.size()>5)
+    			{
+    			  product.remove(product.firstKey()); 
+    			}
+    			 
+    		 }
+    		 protected void cleanup(Context c)
+    		 {
+    			 for (Text t : Top5_ViableProductSubclass.descendingMap().values()) 
+    				{
+    				c.write(NullWritable.get(), t);
+    				}
+    		 }
+    	 }
+     }
+}
+
+    		 
+    		 
+    		 
+    	 
+    		 
+   
+     

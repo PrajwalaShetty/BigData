@@ -1,0 +1,120 @@
+import java.io.IOException;
+import java.util.TreeMap;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Partitioner;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class Top5_ViableProductSubclass {
+
+public class MapperEx extends Mapper<LongWritable,Text,Text,Text>
+{
+	public void map(LongWritable k,Text v, Context c) throws IOException, InterruptedException{
+		
+		String Line =v.toString();
+		String[] arr =Line.split(";");
+		String Prod_id= arr[5];
+		
+		String Sales_age=arr[2]+"-"+arr[8];
+		
+		c.write(new Text(Prod_id),new Text(Sales_age));
+	}
+}
+
+public  static class MyPartitioner extends Partitioner<Text,Text>{
+
+	@Override
+	public int getPartition(Text key, Text value, int numReduceTasks) {
+		
+		 String[] str = value.toString().split("-");
+	      if(str[0].trim().equals("A"))
+	    	  return 0;
+	      else if(str[0].trim().equals("B"))
+	    	  return 1;
+	      else if(str[0].trim().equals("C"))
+	    	  return 2;
+	      else if(str[0].trim().equals("D"))
+	    	  return 3;
+	      else if(str[0].trim().equals("E"))
+	    	  return 4;
+	      else if(str[0].trim().equals("F"))
+			  return 5;
+	      else if(str[0].trim().equals("G"))
+	    	  return 6;
+	      else if(str[0].trim().equals("H"))
+	    	  return 7;
+	      else if(str[0].trim().equals("I"))
+	    	  return 8;
+	      else if(str[0].trim().equals("J"))
+	    	  return 9;
+	      else if(str[0].trim().equals("K"))
+	    	  return 10;
+return 11;
+	}
+	
+}
+
+
+public static class ReducerEx extends Reducer<Text,Text,NullWritable,Text>{
+	private TreeMap<Long, String> product = new TreeMap<Long,String>();
+	
+	
+	public void reduce(Text key,Iterable<Text> values, Context con) 
+			throws IOException, InterruptedException{
+		long sum=0;
+		//String Product="";
+		String Age="";
+		 for(Text val:values){
+			 String [] record =val.toString().split("-");
+			 sum=sum+Long.parseLong(record[1]);
+			 Age=record[0];
+			 }
+		String Product=key.toString()+"-"+Age;
+		 
+		  product.put(sum,Product);
+		  
+		  if(product.size()>5){
+			  product.remove(product.firstKey());
+		  }
+}
+	public void cleanup(Context c) throws IOException, InterruptedException{
+	
+		for(Long t : product.descendingMap().keySet()){
+			c.write(NullWritable.get(),new Text(product.get(t)));
+		}
+	}
+}
+
+
+
+public static void main(String[] args) throws IllegalArgumentException, IOException, ClassNotFoundException, InterruptedException {
+	
+	
+	Configuration conf = new Configuration();
+	Job job = Job.getInstance(conf, "top 5 viable products for every age group");
+ job.setJarByClass(Top5_ViableProductSubclass.class);
+ job.setMapperClass(MapperEx.class);
+ job.setPartitionerClass(MyPartitioner.class);
+ job.setReducerClass(ReducerEx.class);
+ job.setNumReduceTasks(12);
+ 
+ job.setMapOutputKeyClass(Text.class);
+ job.setMapOutputValueClass(Text.class);
+ 
+ job.setOutputKeyClass(NullWritable.class);
+ job.setOutputValueClass(Text.class);
+ 
+ FileInputFormat.addInputPath(job, new Path(args[0]));
+ FileOutputFormat.setOutputPath(job, new Path(args[1]));
+System.exit(job.waitForCompletion(true) ? 0 : 1);
+   }
+ }
+	

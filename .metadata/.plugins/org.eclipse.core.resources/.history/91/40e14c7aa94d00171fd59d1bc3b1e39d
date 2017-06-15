@@ -1,0 +1,19 @@
+import java.io.IOException;
+
+import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+
+
+public class TopCust {
+	public static class MapClass extends Mapper<LongWritable, Text, Text,FloatWritable>
+	   {
+	
+	
+	public static void main(String[] args) {
+		
+	}
+
+	   }
+}

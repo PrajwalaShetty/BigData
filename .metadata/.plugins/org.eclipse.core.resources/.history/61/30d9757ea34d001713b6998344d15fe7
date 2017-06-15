@@ -1,0 +1,47 @@
+import java.io.IOException;
+
+
+
+
+public class TopCust {
+
+	
+	public static void main(String[] args) {
+		public static class MapClass extends Mapper<LongWritable, Text, Text, FloatWritable>
+		   {
+		         	  
+		    	  public void map(LongWritable key, Text EMPDATA, Context context)
+		    			   throws IOException, InterruptedException {
+		    			  String[] a = EMPDATA.toString().split(",");
+		    			  String city = a[2];
+		    			  try {
+		    			   Float salary = Float.parseFloat(a[4]);
+		    			   context.write(new Text(city), new FloatWritable(salary));
+		    			  } catch (Exception e) {
+		    			   e.printStackTrace();
+		    			  }
+		      }
+		   }
+		   public static class ReduceClass extends Reducer<Text, FloatWritable, Text, Text> {
+				  public void reduce(Text key, Iterable<FloatWritable> valueList,
+						   Context con) throws IOException, InterruptedException {
+						  try {
+						   Float total = (float) 0;
+						   int count = 0;
+						   for (FloatWritable var : valueList) {
+						    total += var.get();
+						    System.out.println("reducer " + var.get());
+						    count++;
+						   }
+						   Float avg = (Float) total / count;
+						   String out = "Total: " + total + " :: " + "Average: " + avg;
+						   con.write(key, new Text(out));
+						  } catch (Exception e) {
+						   e.printStackTrace();
+						  }
+			   }
+			  }
+
+	}
+
+}
